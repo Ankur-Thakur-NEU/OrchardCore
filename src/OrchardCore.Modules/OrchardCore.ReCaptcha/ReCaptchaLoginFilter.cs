@@ -13,22 +13,21 @@ namespace OrchardCore.ReCaptcha
     public class ReCaptchaLoginFilter : IAsyncResultFilter
     {
         private readonly ILayoutAccessor _layoutAccessor;
-        private readonly ISiteService _siteService;
         private readonly ReCaptchaService _reCaptchaService;
         private readonly IShapeFactory _shapeFactory;
 
-        private ReCaptchaSettings _reCaptchaSettings;
+        private readonly ReCaptchaSettings _reCaptchaSettings;
 
         public ReCaptchaLoginFilter(
             ILayoutAccessor layoutAccessor,
-            ISiteService siteService,
             ReCaptchaService reCaptchaService,
-            IShapeFactory shapeFactory)
+            IShapeFactory shapeFactory,
+            IOptions<ReCaptchaSettings> optionsAccessor)
         {
             _layoutAccessor = layoutAccessor;
-            _siteService = siteService;
             _reCaptchaService = reCaptchaService;
             _shapeFactory = shapeFactory;
+            _reCaptchaSettings = optionsAccessor.Value;
         }
 
         public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
@@ -39,8 +38,6 @@ namespace OrchardCore.ReCaptcha
                 await next();
                 return;
             }
-
-            _reCaptchaSettings ??= (await _siteService.GetSiteSettingsAsync()).As<ReCaptchaSettings>();
 
             if (!_reCaptchaSettings.IsValid())
             {
